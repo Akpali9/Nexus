@@ -17,7 +17,7 @@ export default function StoriesBar() {
 
   return (
     <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '8px', marginBottom: '16px' }}>
-      {stories.map(user => (
+      {stories.map((user) => (
         <div key={user.id} style={{ textAlign: 'center', cursor: 'pointer' }}>
           <div className="story-ring" style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'linear-gradient(45deg, #f09433, #d62976, #962fbf)', padding: '2px' }}>
             <div className="avatar-placeholder" style={{ width: '60px', height: '60px', borderRadius: '50%' }}>{user.display_name?.[0]}</div>
