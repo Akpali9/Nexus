@@ -1,17 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal } from 'lucide-react';
-import { supabase } from '../../services/supabase';
-import { useAuth } from '../../context/AuthContext';
+import { supabase } from '../services/supabase';
+import { useAuthStore } from '../stores/authStore';
 
 export default function PostCard({ post }) {
-  const { user } = useAuth();
+  const { user } = useAuthStore();
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(post.likes_count);
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
 
-  // Check if user liked this post
   useEffect(() => {
     if (!user) return;
     const checkLike = async () => {
@@ -30,18 +29,17 @@ export default function PostCard({ post }) {
     if (!user) return;
     if (liked) {
       await supabase.from('likes').delete().eq('post_id', post.id).eq('user_id', user.id);
-      setLikesCount(prev => prev - 1);
+      setLikesCount((prev) => prev - 1);
     } else {
       await supabase.from('likes').insert({ post_id: post.id, user_id: user.id });
-      setLikesCount(prev => prev + 1);
-      // Create notification
+      setLikesCount((prev) => prev + 1);
       if (post.user_id !== user.id) {
         await supabase.from('notifications').insert({
           user_id: post.user_id,
           type: 'like',
           actor_id: user.id,
           post_id: post.id,
-          content: 'liked your post'
+          content: 'liked your post',
         });
       }
     }
@@ -66,18 +64,16 @@ export default function PostCard({ post }) {
       .select('*, user:profiles(*)')
       .single();
     if (data) {
-      setComments(prev => [...prev, data]);
+      setComments((prev) => [...prev, data]);
       setNewComment('');
-      // Update post comments count
       await supabase.rpc('increment_post_comments', { post_id: post.id });
-      // Create notification
       if (post.user_id !== user.id) {
         await supabase.from('notifications').insert({
           user_id: post.user_id,
           type: 'comment',
           actor_id: user.id,
           post_id: post.id,
-          content: newComment
+          content: newComment,
         });
       }
     }
@@ -129,7 +125,7 @@ export default function PostCard({ post }) {
       {/* Comments section */}
       {showComments && (
         <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border-subtle)', background: 'var(--bg-secondary)' }}>
-          {comments.map(comment => (
+          {comments.map((comment) => (
             <div key={comment.id} style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
               <div className="avatar-placeholder" style={{ width: '28px', height: '28px', fontSize: '12px' }}>
                 {comment.user?.display_name?.[0]}
