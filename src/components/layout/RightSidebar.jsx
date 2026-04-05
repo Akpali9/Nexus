@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../services/supabase';
-import { useAuth } from '../context/AuthContext';
+import { useAuthStore } from '../stores/authStore';
 
 export default function RightSidebar() {
-  const { profile } = useAuth();
+  const { profile } = useAuthStore();
   const [suggestedUsers, setSuggestedUsers] = useState([]);
 
   useEffect(() => {
@@ -23,7 +23,7 @@ export default function RightSidebar() {
     <div style={{ width: '280px', position: 'sticky', top: '24px' }}>
       <div className="card" style={{ padding: '16px', marginBottom: '16px' }}>
         <h3 style={{ fontWeight: 600, marginBottom: '12px' }}>Suggested for you</h3>
-        {suggestedUsers.map(user => (
+        {suggestedUsers.map((user) => (
           <div key={user.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
             <div className="avatar-placeholder" style={{ width: '32px', height: '32px' }}>{user.display_name?.[0]}</div>
             <div style={{ flex: 1 }}>
