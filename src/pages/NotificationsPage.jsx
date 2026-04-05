@@ -1,6 +1,7 @@
-import { useState } from 'react'
-import { Heart, MessageCircle, UserPlus, Radio, Gift, CheckCircle, Bell, BellOff, Zap } from 'lucide-react'
-import { MOCK_USERS } from '../store/appStore'
+import { useState, useEffect } from 'react';
+import { Heart, MessageCircle, UserPlus, Radio, Gift, CheckCircle, Bell, BellOff, Zap } from 'lucide-react';
+import { MOCK_USERS } from '../store/appStore';
+import { useRealtime } from '../context/RealtimeContext';
 
 const NOTIFICATIONS = [
   { id: '1', type: 'like', user: MOCK_USERS[0], content: 'liked your post', target: '"Just dropped a new track 🎵"', time: '2m ago', read: false },
@@ -11,7 +12,7 @@ const NOTIFICATIONS = [
   { id: '6', type: 'gift', user: MOCK_USERS[0], content: 'sent you a gift', target: '🎁 Super Star × 5', time: '3h ago', read: true },
   { id: '7', type: 'follow', user: MOCK_USERS[3], content: 'started following you', target: null, time: '5h ago', read: true },
   { id: '8', type: 'like', user: MOCK_USERS[2], content: 'liked your comment', target: '"That bassline tho 😍"', time: '1d ago', read: true },
-]
+];
 
 const TYPE_CONFIG = {
   like: { icon: Heart, color: '#f87171', bg: 'rgba(248,113,113,0.15)', label: 'Like' },
@@ -20,11 +21,11 @@ const TYPE_CONFIG = {
   live: { icon: Radio, color: '#f87171', bg: 'rgba(248,113,113,0.15)', label: 'Live' },
   mention: { icon: Zap, color: '#fbbf24', bg: 'rgba(251,191,36,0.15)', label: 'Mention' },
   gift: { icon: Gift, color: '#f472b6', bg: 'rgba(244,114,182,0.15)', label: 'Gift' },
-}
+};
 
 function NotifCard({ notif, onRead }) {
-  const config = TYPE_CONFIG[notif.type]
-  const Icon = config.icon
+  const config = TYPE_CONFIG[notif.type];
+  const Icon = config.icon;
 
   return (
     <div onClick={() => onRead(notif.id)} style={{
@@ -33,10 +34,7 @@ function NotifCard({ notif, onRead }) {
       borderRadius: 'var(--radius-md)', cursor: 'pointer',
       borderLeft: notif.read ? '3px solid transparent' : '3px solid var(--accent-primary)',
       transition: 'background 150ms', position: 'relative',
-    }}
-      onMouseEnter={e => e.currentTarget.style.background = notif.read ? 'var(--bg-hover)' : 'rgba(124,92,252,0.08)'}
-      onMouseLeave={e => e.currentTarget.style.background = notif.read ? 'transparent' : 'rgba(124,92,252,0.04)'}
-    >
+    }}>
       <div style={{ position: 'relative', flexShrink: 0 }}>
         <div className="avatar-placeholder" style={{ width: 44, height: 44, fontSize: 15 }}>{notif.user.initials}</div>
         <div style={{
@@ -65,34 +63,42 @@ function NotifCard({ notif, onRead }) {
         </button>
       )}
     </div>
-  )
+  );
 }
 
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState(NOTIFICATIONS)
-  const [filter, setFilter] = useState('all')
+  const { newNotifications, setNewNotifications } = useRealtime();
+  const [notifications, setNotifications] = useState(NOTIFICATIONS);
+  const [filter, setFilter] = useState('all');
 
-  const unread = notifications.filter(n => !n.read)
+  useEffect(() => {
+    if (newNotifications.length > 0) {
+      setNotifications(prev => [...newNotifications, ...prev]);
+      setNewNotifications([]);
+    }
+  }, [newNotifications, setNewNotifications]);
+
+  const unread = notifications.filter(n => !n.read);
   const filters = [
     { id: 'all', label: 'All' },
     { id: 'likes', label: 'Likes', types: ['like'] },
     { id: 'follows', label: 'Follows', types: ['follow'] },
     { id: 'comments', label: 'Comments', types: ['comment', 'mention'] },
     { id: 'activity', label: 'Activity', types: ['live', 'gift'] },
-  ]
+  ];
 
   const filtered = notifications.filter(n => {
-    const f = filters.find(f => f.id === filter)
-    return f.types ? f.types.includes(n.type) : true
-  })
+    const f = filters.find(f => f.id === filter);
+    return f.types ? f.types.includes(n.type) : true;
+  });
 
   const markRead = (id) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
-  }
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  };
 
   const markAllRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })))
-  }
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  };
 
   return (
     <div style={{ maxWidth: 640, margin: '0 auto', padding: '24px 16px' }}>
@@ -118,7 +124,6 @@ export default function NotificationsPage() {
         </div>
       </div>
 
-      {/* Filters */}
       <div style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 16, paddingBottom: 4 }}>
         {filters.map(f => (
           <button key={f.id} onClick={() => setFilter(f.id)} style={{
@@ -130,7 +135,6 @@ export default function NotificationsPage() {
         ))}
       </div>
 
-      {/* Unread section */}
       {filter === 'all' && unread.length > 0 && (
         <div style={{ marginBottom: 16 }}>
           <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>NEW</p>
@@ -145,7 +149,6 @@ export default function NotificationsPage() {
         </div>
       )}
 
-      {/* Earlier */}
       <div>
         {filter === 'all' && notifications.some(n => n.read) && (
           <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>EARLIER</p>
@@ -166,5 +169,5 @@ export default function NotificationsPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
