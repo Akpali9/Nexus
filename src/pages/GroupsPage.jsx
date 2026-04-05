@@ -79,19 +79,30 @@ function GroupCallModal({ group, onClose }) {
 }
 
 function GroupChat({ group, onClose }) {
-  const [messages, setMessages] = useState(GROUP_MSGS)
-  const [input, setInput] = useState('')
-  const [showCall, setShowCall] = useState(false)
+  const { groupMessages, emit } = useRealtime();
+  const [messages, setMessages] = useState(GROUP_MSGS);
+  const [input, setInput] = useState('');
+  const [showCall, setShowCall] = useState(false);
+
+  useEffect(() => {
+    const newGroupMsgs = groupMessages[group.id] || [];
+    if (newGroupMsgs.length) {
+      setMessages(prev => [...prev, ...newGroupMsgs]);
+    }
+  }, [groupMessages, group.id]);
 
   const handleSend = () => {
-    if (!input.trim()) return
-    setMessages(prev => [...prev, {
+    if (!input.trim()) return;
+    const newMsg = {
       id: Date.now().toString(),
       user: { initials: 'YO', display_name: 'You', username: 'your_handle' },
-      content: input, time: 'just now',
-    }])
-    setInput('')
-  }
+      content: input,
+      time: 'just now',
+    };
+    setMessages(prev => [...prev, newMsg]);
+    emit('new_group_message', { groupId: group.id, ...newMsg });
+    setInput('');
+  };
 
   return (
     <>
