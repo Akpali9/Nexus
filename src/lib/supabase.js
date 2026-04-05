@@ -5,25 +5,16 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-export const TABLES = {
-  PROFILES: 'profiles',
-  POSTS: 'posts',
-  STORIES: 'stories',
-  COMMENTS: 'comments',
-  LIKES: 'likes',
-  FOLLOWS: 'follows',
-  MESSAGES: 'messages',
-  CONVERSATIONS: 'conversations',
-  LIVE_STREAMS: 'live_streams',
-  GROUPS: 'groups',
-  GROUP_MEMBERS: 'group_members',
-  NOTIFICATIONS: 'notifications',
-  PAYMENTS: 'payments',
-  SUBSCRIPTIONS: 'subscriptions',
-}
 
-export const STORAGE = {
-  AVATARS: 'avatars',
-  POSTS: 'post-media',
-  STORIES: 'stories',
-}
+
+// Helper to get current user's profile
+export const getCurrentProfile = async () => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', user.id)
+    .single();
+  return profile;
+};
