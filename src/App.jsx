@@ -1,7 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-import { RealtimeProvider } from './context/RealtimeContext';
-import { useAuth } from './context/AuthContext';
+import { useAuthStore } from './stores/authStore';
 import AuthPage from './pages/AuthPage';
 import HomePage from './pages/HomePage';
 import AnalyticsPage from './pages/AnalyticsPage';
@@ -13,10 +11,10 @@ import MessagesPage from './pages/MessagesPage';
 import MonetizePage from './pages/MonetizePage';
 import NotificationsPage from './pages/NotificationsPage';
 import ProfilePage from './pages/ProfilePage';
-import './styles.css';
+import './index.css';
 
 function AppRoutes() {
-  const { user, loading } = useAuth();
+  const { user, loading } = useAuthStore();
   if (loading) return <div className="loading">Loading...</div>;
   if (!user) return <AuthPage />;
   return (
@@ -37,13 +35,9 @@ function AppRoutes() {
 
 function App() {
   return (
-    <AuthProvider>
-      <RealtimeProvider>
-        <BrowserRouter>
-          <AppRoutes />
-        </BrowserRouter>
-      </RealtimeProvider>
-    </AuthProvider>
+    <BrowserRouter>
+      <AppRoutes />
+    </BrowserRouter>
   );
 }
 
