@@ -10,7 +10,6 @@ export const useRealtimeStore = create((set, get) => ({
   groupMessages: {},
   analytics: {},
 
-  // Actions to merge incoming real-time data
   addNewPost: (post) => set((state) => ({ newPosts: [post, ...state.newPosts] })),
   clearNewPosts: () => set({ newPosts: [] }),
   addNewMessage: (msg) => set((state) => ({ newMessages: [...state.newMessages, msg] })),
@@ -29,7 +28,6 @@ export const useRealtimeStore = create((set, get) => ({
     })),
   updateAnalytics: (stats) => set({ analytics: stats }),
 
-  // Emit function (inserts into Supabase, which triggers real-time)
   emit: async (event, data) => {
     switch (event) {
       case 'new_post':
@@ -53,13 +51,11 @@ export const useRealtimeStore = create((set, get) => ({
   },
 }));
 
-// Set up all real-time subscriptions once
 let subscriptionsInitialized = false;
 export const initRealtimeSubscriptions = (userId) => {
   if (subscriptionsInitialized) return;
   subscriptionsInitialized = true;
 
-  // 1. Posts
   supabase
     .channel('public:posts')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'posts' }, (payload) => {
@@ -67,7 +63,6 @@ export const initRealtimeSubscriptions = (userId) => {
     })
     .subscribe();
 
-  // 2. Messages (only those where current user is participant)
   supabase
     .channel('public:messages')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, async (payload) => {
@@ -81,7 +76,6 @@ export const initRealtimeSubscriptions = (userId) => {
     })
     .subscribe();
 
-  // 3. Notifications
   supabase
     .channel('public:notifications')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, (payload) => {
@@ -91,7 +85,6 @@ export const initRealtimeSubscriptions = (userId) => {
     })
     .subscribe();
 
-  // 4. Live streams (viewer updates)
   supabase
     .channel('public:live_streams')
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'live_streams' }, (payload) => {
@@ -99,7 +92,6 @@ export const initRealtimeSubscriptions = (userId) => {
     })
     .subscribe();
 
-  // 5. Live chat messages
   supabase
     .channel('public:live_chat_messages')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'live_chat_messages' }, (payload) => {
@@ -107,7 +99,6 @@ export const initRealtimeSubscriptions = (userId) => {
     })
     .subscribe();
 
-  // 6. Group messages
   supabase
     .channel('public:group_messages')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'group_messages' }, (payload) => {
