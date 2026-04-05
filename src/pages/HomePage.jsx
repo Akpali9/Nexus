@@ -1,14 +1,31 @@
 import { useState, useEffect } from 'react';
-import StoriesBar from '../components/stories/StoriesBar';
-import PostCard from '../components/feed/PostCard';
-import CreatePost from '../components/feed/CreatePost';
-import RightSidebar from '../components/layout/RightSidebar';
-import { MOCK_POSTS } from '../store/appStore';
+import { supabase } from '../services/supabase';
+import { useAuth } from '../context/AuthContext';
 import { useRealtime } from '../context/RealtimeContext';
+import StoriesBar from '../components/stories/StoriesBar';
+import CreatePost from '../components/feed/CreatePost';
+import PostCard from '../components/feed/PostCard';
+import RightSidebar from '../components/layout/RightSidebar';
 
 export default function HomePage() {
-  const { newPosts, setNewPosts } = useRealtime();
-  const [posts, setPosts] = useState(MOCK_POSTS);
+  const { user } = useAuth();
+  const { newPosts, setNewPosts, emit } = useRealtime();
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+    const fetchPosts = async () => {
+      const { data } = await supabase
+        .from('posts')
+        .select('*, user:profiles(*)')
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (data) setPosts(data);
+      setLoading(false);
+    };
+    fetchPosts();
+  }, [user]);
 
   useEffect(() => {
     if (newPosts.length > 0) {
@@ -17,16 +34,27 @@ export default function HomePage() {
     }
   }, [newPosts, setNewPosts]);
 
-  const handlePost = (newPost) => {
-    setPosts(prev => [newPost, ...prev]);
-    // Broadcast to others (simulated)
-    const { realtime } = require('../services/realtime');
-    realtime.emit('new_post', newPost);
+  const handlePost = async (postData) => {
+    const { data, error } = await supabase
+      .from('posts')
+      .insert({
+        user_id: user.id,
+        content: postData.content,
+        media_url: postData.media
+      })
+      .select('*, user:profiles(*)')
+      .single();
+    if (data) {
+      setPosts(prev => [data, ...prev]);
+      emit('new_post', data);
+    }
   };
 
+  if (loading) return <div className="loading">Loading feed...</div>;
+
   return (
-    <div style={{ display: 'flex', gap: 24, padding: '24px 24px 24px 0', minHeight: '100vh' }}>
-      <div style={{ flex: 1, maxWidth: 640, minWidth: 0 }}>
+    <div style={{ display: 'flex', gap: '24px', padding: '24px 24px 24px 0', minHeight: '100vh' }}>
+      <div style={{ flex: 1, maxWidth: '640px', minWidth: 0 }}>
         <StoriesBar />
         <CreatePost onPost={handlePost} />
         {posts.map(post => (
