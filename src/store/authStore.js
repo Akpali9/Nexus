@@ -18,7 +18,6 @@ export const useAuthStore = create((set) => ({
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
     set({ user: data.user });
-    // fetch profile after sign in
     const { data: profile } = await supabase
       .from('profiles')
       .select('*')
