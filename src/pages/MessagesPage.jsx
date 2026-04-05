@@ -1,8 +1,23 @@
-import { useState, useRef, useEffect } from 'react'
-import { Send, Phone, Video, MoreHorizontal, Bot, Search, Plus, Circle } from 'lucide-react'
-import { MOCK_MESSAGES, MOCK_USERS } from '../store/appStore'
+import { useState, useRef, useEffect } from 'react';
+import { Send, Phone, Video, MoreHorizontal, Bot, Search, Plus } from 'lucide-react';
+import { MOCK_MESSAGES, MOCK_USERS } from '../store/appStore';
+import { useRealtime } from '../context/RealtimeContext';
 
-const AI_WELCOME = { id: 'ai-1', role: 'assistant', content: "Hey! I'm Nexus AI, your intelligent assistant. I can help with content ideas, answer questions, help draft posts, and much more. What's on your mind? ✨", time: 'now' }
+const AI_WELCOME = { id: 'ai-1', role: 'assistant', content: "Hey! I'm Nexus AI, your intelligent assistant. I can help with content ideas, answer questions, help draft posts, and much more. What's on your mind? ✨", time: 'now' };
+
+const CONV_LIST = [
+  { id: 'ai', isAI: true, lastMsg: 'How can I help you today?', time: 'now', unread: 0 },
+  ...MOCK_MESSAGES,
+];
+
+const SAMPLE_REPLIES = {
+  'ai': [
+    "That's a great question! I can help you craft engaging content for your audience.",
+    "Here are some ideas for your next post: 1) Behind-the-scenes content, 2) Q&A sessions, 3) Tutorial videos 🎯",
+    "Based on your profile, your audience is most active between 6-9 PM. Best time to post! 📊",
+  ],
+  'default': ["That sounds great! 🔥", "Can't wait to see it!", "Let's collab sometime 🤝"],
+};
 
 function ConversationItem({ conv, active, onClick }) {
   return (
@@ -12,10 +27,7 @@ function ConversationItem({ conv, active, onClick }) {
       background: active ? 'var(--accent-glow)' : 'transparent',
       border: active ? '1px solid var(--border-accent)' : '1px solid transparent',
       transition: 'all 150ms', marginBottom: 2,
-    }}
-      onMouseEnter={e => { if (!active) e.currentTarget.style.background = 'var(--bg-hover)' }}
-      onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent' }}
-    >
+    }}>
       <div style={{ position: 'relative', flexShrink: 0 }}>
         {conv.isAI ? (
           <div style={{
@@ -46,7 +58,7 @@ function ConversationItem({ conv, active, onClick }) {
         }}>{conv.unread}</span>
       )}
     </div>
-  )
+  );
 }
 
 function Message({ msg, isOwn, isAI }) {
@@ -78,70 +90,77 @@ function Message({ msg, isOwn, isAI }) {
         <p style={{ fontSize: 10, color: isOwn ? 'rgba(255,255,255,0.6)' : 'var(--text-muted)', marginTop: 4 }}>{msg.time}</p>
       </div>
     </div>
-  )
-}
-
-const CONV_LIST = [
-  { id: 'ai', isAI: true, lastMsg: 'How can I help you today?', time: 'now', unread: 0 },
-  ...MOCK_MESSAGES,
-]
-
-const SAMPLE_REPLIES = {
-  'ai': [
-    "That's a great question! I can help you craft engaging content for your audience.",
-    "Here are some ideas for your next post: 1) Behind-the-scenes content, 2) Q&A sessions, 3) Tutorial videos 🎯",
-    "Based on your profile, your audience is most active between 6-9 PM. Best time to post! 📊",
-  ],
-  'default': ["That sounds great! 🔥", "Can't wait to see it!", "Let's collab sometime 🤝"],
+  );
 }
 
 export default function MessagesPage() {
-  const [activeConv, setActiveConv] = useState(CONV_LIST[0])
-  const [messages, setMessages] = useState({ ai: [AI_WELCOME] })
-  const [input, setInput] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [search, setSearch] = useState('')
-  const messagesEndRef = useRef(null)
+  const { newMessages, emit } = useRealtime();
+  const [activeConv, setActiveConv] = useState(CONV_LIST[0]);
+  const [messages, setMessages] = useState({ ai: [AI_WELCOME] });
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState('');
+  const messagesEndRef = useRef(null);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, activeConv])
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, activeConv]);
+
+  // Append real-time messages to the correct conversation
+  useEffect(() => {
+    newMessages.forEach(msg => {
+      setMessages(prev => ({
+        ...prev,
+        [msg.conversationId]: [...(prev[msg.conversationId] || []), msg]
+      }));
+    });
+  }, [newMessages]);
 
   const activeMessages = messages[activeConv.id] || [
     { id: '1', role: 'other', content: activeConv.lastMsg, time: activeConv.time, initials: activeConv.user?.initials }
-  ]
+  ];
 
   const handleSend = async () => {
-    if (!input.trim() || loading) return
-    const userMsg = { id: Date.now().toString(), role: 'user', content: input, time: 'now' }
-    const convId = activeConv.id
+    if (!input.trim() || loading) return;
+    const userMsg = { id: Date.now().toString(), role: 'user', content: input, time: 'now' };
+    const convId = activeConv.id;
 
-    setMessages(prev => ({ ...prev, [convId]: [...(prev[convId] || []), userMsg] }))
-    setInput('')
-    setLoading(true)
+    setMessages(prev => ({ ...prev, [convId]: [...(prev[convId] || []), userMsg] }));
+    setInput('');
+    setLoading(true);
 
-    await new Promise(r => setTimeout(r, 800 + Math.random() * 600))
-
-    const replies = SAMPLE_REPLIES[convId === 'ai' ? 'ai' : 'default']
+    // Simulate AI/delayed reply
+    await new Promise(r => setTimeout(r, 800 + Math.random() * 600));
+    const replies = SAMPLE_REPLIES[convId === 'ai' ? 'ai' : 'default'];
     const reply = {
       id: (Date.now() + 1).toString(),
       role: 'assistant',
       content: replies[Math.floor(Math.random() * replies.length)],
       time: 'now',
       initials: activeConv.user?.initials,
+    };
+    setMessages(prev => ({ ...prev, [convId]: [...(prev[convId] || []), reply] }));
+    setLoading(false);
+
+    // Emit to realtime (if not AI)
+    if (convId !== 'ai') {
+      emit('new_message', {
+        conversationId: convId,
+        role: 'user',
+        content: input,
+        time: 'now',
+        initials: 'YO',
+      });
     }
-    setMessages(prev => ({ ...prev, [convId]: [...(prev[convId] || []), reply] }))
-    setLoading(false)
-  }
+  };
 
   const filteredConvs = CONV_LIST.filter(c =>
     c.isAI ? 'nexus ai'.includes(search.toLowerCase()) :
     c.user.display_name.toLowerCase().includes(search.toLowerCase())
-  )
+  );
 
   return (
     <div style={{ display: 'flex', height: '100vh', background: 'var(--bg-primary)' }}>
-      {/* Conv list */}
       <div style={{ width: 320, borderRight: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', background: 'var(--bg-secondary)' }}>
         <div style={{ padding: 16, borderBottom: '1px solid var(--border-subtle)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
@@ -160,9 +179,7 @@ export default function MessagesPage() {
         </div>
       </div>
 
-      {/* Chat area */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        {/* Header */}
         <div style={{
           padding: '16px 20px', borderBottom: '1px solid var(--border-subtle)',
           background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', gap: 12,
@@ -198,7 +215,6 @@ export default function MessagesPage() {
           </div>
         </div>
 
-        {/* Messages */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column' }}>
           {activeMessages.map(msg => (
             <Message key={msg.id} msg={msg} isOwn={msg.role === 'user'} isAI={activeConv.isAI} />
@@ -229,7 +245,6 @@ export default function MessagesPage() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input */}
         <div style={{ padding: '16px 20px', borderTop: '1px solid var(--border-subtle)', background: 'var(--bg-secondary)' }}>
           <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
             <div style={{ flex: 1, position: 'relative' }}>
@@ -255,5 +270,5 @@ export default function MessagesPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
