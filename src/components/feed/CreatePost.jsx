@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Image, Video, MapPin, Smile } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuthStore } from '../stores/authStore';
 
 export default function CreatePost({ onPost }) {
-  const { profile } = useAuth();
+  const { profile } = useAuthStore();
   const [content, setContent] = useState('');
   const [media, setMedia] = useState(null);
 
