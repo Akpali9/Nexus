@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react'
-import { Camera, RotateCcw, Download, Share2, Sparkles, Sun, Contrast, Droplets, Zap } from 'lucide-react'
+import { useState, useRef } from 'react';
+import { Camera, RotateCcw, Download, Share2, Sparkles, Sun, Contrast, Droplets, Zap } from 'lucide-react';
 
 const FILTERS = [
   { id: 'none', name: 'Original', css: 'none' },
@@ -10,7 +10,7 @@ const FILTERS = [
   { id: 'warm', name: 'Warm', css: 'sepia(0.4) saturate(1.4) brightness(1.05)' },
   { id: 'cool', name: 'Cool', css: 'hue-rotate(180deg) saturate(1.2) brightness(0.95)' },
   { id: 'dramatic', name: 'Dramatic', css: 'contrast(1.5) saturate(1.3) brightness(0.85)' },
-]
+];
 
 const OVERLAYS = [
   { id: 'none', name: 'None', emoji: '✕' },
@@ -18,22 +18,21 @@ const OVERLAYS = [
   { id: 'heart', name: 'Hearts', emoji: '❤️' },
   { id: 'fire', name: 'Fire', emoji: '🔥' },
   { id: 'stars', name: 'Stars', emoji: '⭐' },
-]
+];
 
 export default function CameraPage() {
-  const [filter, setFilter] = useState('none')
-  const [overlay, setOverlay] = useState('none')
-  const [brightness, setBrightness] = useState(100)
-  const [contrast, setContrast] = useState(100)
-  const [saturation, setSaturation] = useState(100)
-  const [captured, setCaptured] = useState(false)
-  const [tab, setTab] = useState('filters')
+  const [filter, setFilter] = useState('none');
+  const [overlay, setOverlay] = useState('none');
+  const [brightness, setBrightness] = useState(100);
+  const [contrast, setContrast] = useState(100);
+  const [saturation, setSaturation] = useState(100);
+  const [captured, setCaptured] = useState(false);
+  const [tab, setTab] = useState('filters');
 
-  const activeFilter = FILTERS.find(f => f.id === filter)
-  const adjustments = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`
-  const combinedFilter = activeFilter.css !== 'none' ? `${activeFilter.css} ${adjustments}` : adjustments
-
-  const overlayEmoji = OVERLAYS.find(o => o.id === overlay)?.emoji
+  const activeFilter = FILTERS.find(f => f.id === filter);
+  const adjustments = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
+  const combinedFilter = activeFilter.css !== 'none' ? `${activeFilter.css} ${adjustments}` : adjustments;
+  const overlayEmoji = OVERLAYS.find(o => o.id === overlay)?.emoji;
 
   return (
     <div style={{ maxWidth: 480, margin: '0 auto', padding: '24px 16px' }}>
@@ -41,7 +40,6 @@ export default function CameraPage() {
         <span className="gradient-text">Camera</span> Studio
       </h1>
 
-      {/* Viewfinder */}
       <div style={{
         width: '100%', aspectRatio: '3/4', borderRadius: 24,
         background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
@@ -50,20 +48,17 @@ export default function CameraPage() {
         filter: combinedFilter,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
-        {/* Simulated camera feed */}
         <div style={{ textAlign: 'center' }}>
-          <div className="avatar-placeholder" style={{ width: 120, height: 120, fontSize: 42, margin: '0 auto 16px', border: '3px solid rgba(255,255,255,0.1)' }}>YO</div>
+          <div className="avatar-placeholder" style={{ width: 120, height: 120, fontSize: 42, margin: '0 auto 16px', border: '3px solid rgba(255,255,255,0.1)' }}>📸</div>
           <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13 }}>Camera Preview</p>
         </div>
 
-        {/* Overlay */}
         {overlay !== 'none' && (
           <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
             <div style={{ fontSize: 60, opacity: 0.7, animation: 'pulseLive 2s infinite' }}>{overlayEmoji}</div>
           </div>
         )}
 
-        {/* Grid overlay */}
         <div style={{
           position: 'absolute', inset: 0,
           backgroundImage: 'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)',
@@ -71,14 +66,9 @@ export default function CameraPage() {
           pointerEvents: 'none',
         }} />
 
-        {/* Top controls */}
         <div style={{ position: 'absolute', top: 16, left: 16, right: 16, display: 'flex', justifyContent: 'space-between' }}>
-          <button className="btn-icon" style={{ background: 'rgba(0,0,0,0.5)', color: 'white', border: 'none' }}>
-            <RotateCcw size={16} />
-          </button>
-          <button className="btn-icon" style={{ background: 'rgba(0,0,0,0.5)', color: 'white', border: 'none' }}>
-            <Sparkles size={16} />
-          </button>
+          <button className="btn-icon" style={{ background: 'rgba(0,0,0,0.5)', color: 'white', border: 'none' }}><RotateCcw size={16} /></button>
+          <button className="btn-icon" style={{ background: 'rgba(0,0,0,0.5)', color: 'white', border: 'none' }}><Sparkles size={16} /></button>
         </div>
 
         {captured && (
@@ -91,7 +81,6 @@ export default function CameraPage() {
         )}
       </div>
 
-      {/* Capture button */}
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20, gap: 16 }}>
         <button style={{
           width: 70, height: 70, borderRadius: '50%',
@@ -104,7 +93,6 @@ export default function CameraPage() {
         />
       </div>
 
-      {/* Tabs */}
       <div style={{ display: 'flex', gap: 4, background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)', padding: 4, marginBottom: 16 }}>
         {['filters', 'overlays', 'adjust'].map(t => (
           <button key={t} onClick={() => setTab(t)} style={{
@@ -116,7 +104,6 @@ export default function CameraPage() {
         ))}
       </div>
 
-      {/* Filters */}
       {tab === 'filters' && (
         <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 8 }}>
           {FILTERS.map(f => (
@@ -135,7 +122,6 @@ export default function CameraPage() {
         </div>
       )}
 
-      {/* Overlays */}
       {tab === 'overlays' && (
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           {OVERLAYS.map(o => (
@@ -152,7 +138,6 @@ export default function CameraPage() {
         </div>
       )}
 
-      {/* Adjust */}
       {tab === 'adjust' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {[
@@ -176,15 +161,10 @@ export default function CameraPage() {
         </div>
       )}
 
-      {/* Action buttons */}
       <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
-        <button className="btn-ghost" style={{ flex: 1, justifyContent: 'center' }}>
-          <Download size={16} /> Save
-        </button>
-        <button className="btn-primary" style={{ flex: 1, justifyContent: 'center' }}>
-          <Share2 size={16} /> Share to Feed
-        </button>
+        <button className="btn-ghost" style={{ flex: 1, justifyContent: 'center' }}><Download size={16} /> Save</button>
+        <button className="btn-primary" style={{ flex: 1, justifyContent: 'center' }}><Share2 size={16} /> Share to Feed</button>
       </div>
     </div>
-  )
+  );
 }
