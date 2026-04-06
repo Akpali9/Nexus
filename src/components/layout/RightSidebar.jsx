@@ -35,7 +35,7 @@ export default function RightSidebar() {
         ))}
       </div>
       <div className="card" style={{ padding: '16px' }}>
-        <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>© 2025 Nexus • Terms • Privacy</p>
+        <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>© 2026 Nexus • Terms • Privacy</p>
       </div>
     </div>
   );

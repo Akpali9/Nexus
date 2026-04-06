@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Home, Search, Bell, MessageCircle, User } from 'lucide-react'
-import { useAppStore } from '../../store/appStore'
+import { useAppStore } from '../store/appStore'
 
 const NAV = [
   { icon: Home, path: '/', label: 'Home' },

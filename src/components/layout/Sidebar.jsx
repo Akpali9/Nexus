@@ -4,7 +4,7 @@ import {
   Home, Search, Bell, MessageCircle, Video, Users, Camera,
   Settings, TrendingUp, Zap, LogOut, ChevronRight, Star, DollarSign
 } from 'lucide-react'
-import { useAppStore } from '../../store/appStore'
+import { useAppStore } from '../store/appStore'
 
 const NAV_ITEMS = [
   { icon: Home, label: 'Home', path: '/' },
