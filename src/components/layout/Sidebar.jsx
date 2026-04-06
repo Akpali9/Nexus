@@ -1,47 +1,40 @@
-import { useState } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Home, Search, Bell, MessageCircle, Video, Users, Camera,
-  Settings, TrendingUp, Zap, LogOut, ChevronRight, Star, DollarSign
-} from 'lucide-react'
-import { useAppStore } from '../store/appStore'
+  Settings, TrendingUp, LogOut, DollarSign, Shield, ChevronRight, Star, Zap,
+} from 'lucide-react';
+import { useAuthStore } from '../../stores/authStore';
+import { useAdminStore } from '../../stores/adminStore';
+import { useRealtimeStore } from '../../stores/realtimeStore';
 
 const NAV_ITEMS = [
   { icon: Home, label: 'Home', path: '/' },
   { icon: Search, label: 'Explore', path: '/explore' },
-  { icon: Bell, label: 'Notifications', path: '/notifications', badge: true },
-  { icon: MessageCircle, label: 'Messages', path: '/messages' },
+  { icon: Bell, label: 'Notifications', path: '/notifications', badge: 'notifications' },
+  { icon: MessageCircle, label: 'Messages', path: '/messages', badge: 'messages' },
   { icon: Video, label: 'Live', path: '/live' },
   { icon: Camera, label: 'Camera', path: '/camera' },
   { icon: Users, label: 'Groups', path: '/groups' },
   { icon: TrendingUp, label: 'Analytics', path: '/analytics' },
   { icon: DollarSign, label: 'Monetize', path: '/monetize' },
-]
+];
 
 export default function Sidebar() {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const { unreadCount, theme, setTheme } = useAppStore()
-  const [showThemes, setShowThemes] = useState(false)
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { profile, signOut } = useAuthStore();
+  const { newNotifications, newMessages } = useRealtimeStore();
+  const { isAdmin } = useAdminStore();
 
-  const currentUser = {
-    display_name: 'You',
-    username: 'your_handle',
-    initials: 'YO',
-    premium: true,
-  }
-
-  const themes = [
-    { id: 'dark', label: 'Dark', color: '#7c5cfc' },
-    { id: 'light', label: 'Light', color: '#a78bfa' },
-    { id: 'midnight', label: 'Midnight', color: '#4f8eff' },
-    { id: 'forest', label: 'Forest', color: '#22d3a5' },
-    { id: 'crimson', label: 'Crimson', color: '#f87171' },
-  ]
+  const badges = {
+    notifications: newNotifications.length,
+    messages: newMessages.length,
+  };
 
   return (
     <aside style={{
-      width: 'var(--sidebar-width)',
+      width: 'var(--sidebar-width, 240px)',
       height: '100vh',
       position: 'fixed',
       left: 0, top: 0,
@@ -50,122 +43,68 @@ export default function Sidebar() {
       display: 'flex',
       flexDirection: 'column',
       zIndex: 100,
-      overflow: 'hidden',
+      padding: '20px 12px',
     }}>
       {/* Logo */}
-      <div style={{ padding: '24px 20px 20px', borderBottom: '1px solid var(--border-subtle)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: 10,
-            background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-pink))',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <Zap size={18} color="white" fill="white" />
-          </div>
-          <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 20, letterSpacing: '-0.5px' }} className="gradient-text">
-            NEXUS
-          </span>
-        </div>
+      <div style={{ paddingLeft: 12, marginBottom: 28 }}>
+        <h1 style={{ fontFamily: 'var(--font-display, sans-serif)', fontWeight: 900, fontSize: 24 }}>
+          <span className="gradient-text">Nexus</span>
+        </h1>
       </div>
 
       {/* Nav */}
-      <nav style={{ flex: 1, overflowY: 'auto', padding: '12px 12px' }}>
+      <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
         {NAV_ITEMS.map(({ icon: Icon, label, path, badge }) => {
-          const active = location.pathname === path
+          const isActive = location.pathname === path;
+          const count = badge ? badges[badge] : 0;
           return (
-            <button key={path}
+            <button
+              key={path}
               onClick={() => navigate(path)}
               style={{
-                width: '100%', display: 'flex', alignItems: 'center', gap: 12,
-                padding: '10px 12px', borderRadius: 'var(--radius-md)',
-                background: active ? 'var(--accent-glow)' : 'transparent',
-                color: active ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                fontSize: 14, fontWeight: active ? 600 : 400,
-                transition: 'all 150ms ease', marginBottom: 2,
-                border: active ? '1px solid var(--border-accent)' : '1px solid transparent',
+                display: 'flex', alignItems: 'center', gap: 12,
+                padding: '10px 12px', borderRadius: 10,
+                background: isActive ? 'var(--accent-glow, rgba(124,92,252,0.15))' : 'transparent',
+                color: isActive ? 'var(--accent-primary, #7c5cfc)' : 'var(--text-secondary, #aaa)',
+                border: isActive ? '1px solid var(--border-accent, rgba(124,92,252,0.3))' : '1px solid transparent',
+                cursor: 'pointer', fontWeight: isActive ? 600 : 400,
+                fontSize: 14, width: '100%', textAlign: 'left',
+                transition: 'all 120ms',
+                position: 'relative',
               }}
-              onMouseEnter={e => { if (!active) { e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.color = 'var(--text-primary)' }}}
-              onMouseLeave={e => { if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)' }}}
             >
               <Icon size={18} />
-              <span style={{ flex: 1 }}>{label}</span>
-              {badge && unreadCount > 0 && (
+              {label}
+              {count > 0 && (
                 <span style={{
-                  background: 'var(--accent-primary)', color: 'white',
-                  fontSize: 10, fontWeight: 700, padding: '2px 6px',
-                  borderRadius: 999, minWidth: 18, textAlign: 'center',
-                }}>{unreadCount}</span>
+                  marginLeft: 'auto', background: 'var(--accent-primary, #7c5cfc)',
+                  color: 'white', fontSize: 10, fontWeight: 700,
+                  borderRadius: 999, padding: '2px 6px', minWidth: 18, textAlign: 'center',
+                }}>
+                  {count > 9 ? '9+' : count}
+                </span>
               )}
             </button>
-          )
+          );
         })}
-
-        <div className="divider" />
-
-        {/* Go Live Button */}
-        <button onClick={() => navigate('/live')} className="btn-primary" style={{ width: '100%', justifyContent: 'center', marginBottom: 8 }}>
-          <div className="live-dot" />
-          Go Live
-        </button>
-
-        {/* Theme switcher */}
-        <div style={{ marginTop: 8 }}>
-          <button
-            onClick={() => setShowThemes(!showThemes)}
-            style={{
-              width: '100%', display: 'flex', alignItems: 'center', gap: 12,
-              padding: '10px 12px', borderRadius: 'var(--radius-md)',
-              background: 'transparent', color: 'var(--text-secondary)',
-              fontSize: 14, border: '1px solid transparent',
-              transition: 'all 150ms ease',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-hover)' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
-          >
-            <Settings size={18} />
-            <span style={{ flex: 1 }}>Theme</span>
-            <ChevronRight size={14} style={{ transform: showThemes ? 'rotate(90deg)' : 'none', transition: 'transform 200ms' }} />
-          </button>
-
-          {showThemes && (
-            <div style={{ padding: '8px 12px', display: 'flex', flexWrap: 'wrap', gap: 8 }} className="fade-in">
-              {themes.map(t => (
-                <button key={t.id} onClick={() => setTheme(t.id)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 6,
-                    padding: '6px 10px', borderRadius: 999, fontSize: 12,
-                    background: theme === t.id ? 'var(--accent-glow)' : 'var(--bg-tertiary)',
-                    color: theme === t.id ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                    border: theme === t.id ? '1px solid var(--border-accent)' : '1px solid var(--border-subtle)',
-                    transition: 'all 150ms ease',
-                  }}>
-                  <span style={{ width: 8, height: 8, borderRadius: 50, background: t.color, flexShrink: 0 }} />
-                  {t.label}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
       </nav>
 
-      {/* User profile */}
-      <div style={{ padding: '16px', borderTop: '1px solid var(--border-subtle)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 'var(--radius-md)', cursor: 'pointer', transition: 'background 150ms' }}
-          onClick={() => navigate('/profile')}
-          onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
-          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-        >
-          <div className="avatar-placeholder" style={{ width: 36, height: 36, fontSize: 13, flexShrink: 0, position: 'relative' }}>
-            {currentUser.initials}
-            <span className="online-indicator" />
+      {/* Profile + signout */}
+      <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 12 }}>
+        <button onClick={() => navigate('/profile')} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 12px', borderRadius: 10, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
+          <div className="avatar-placeholder" style={{ width: 36, height: 36, fontSize: 14, flexShrink: 0 }}>
+            {profile?.display_name?.[0] || '?'}
           </div>
-          <div style={{ flex: 1, overflow: 'hidden' }}>
-            <p style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.2 }} className="truncate">{currentUser.display_name}</p>
-            <p style={{ fontSize: 11, color: 'var(--text-muted)' }} className="truncate">@{currentUser.username}</p>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{profile?.display_name || 'You'}</p>
+            <p style={{ fontSize: 11, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>@{profile?.username || '...'}</p>
           </div>
-          {currentUser.premium && <Star size={14} style={{ color: 'var(--accent-amber)', flexShrink: 0 }} />}
-        </div>
+        </button>
+        <button onClick={signOut} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '8px 12px', borderRadius: 10, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: 13 }}>
+          <LogOut size={16} /> Sign Out
+        </button>
       </div>
     </aside>
-  )
+  );
 }
+// Note: Admin link is injected via AdminSidebarLink below

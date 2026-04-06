@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Image, Video, MapPin, Smile } from 'lucide-react';
-import { useAuthStore } from '../stores/authStore';
+import { useAuthStore } from '../../stores/authStore';
 
 export default function CreatePost({ onPost }) {
   const { profile } = useAuthStore();

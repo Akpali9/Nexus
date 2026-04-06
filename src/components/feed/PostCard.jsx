@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal } from 'lucide-react';
-import { supabase } from '../services/supabase';
-import { useAuthStore } from '../stores/authStore';
+import { supabase } from '../../services/supabase';
+import { useAuthStore } from '../../stores/authStore';
 
 export default function PostCard({ post }) {
   const { user } = useAuthStore();

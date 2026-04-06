@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../services/supabase';
+import { supabase } from '../../services/supabase';
 
 export default function StoriesBar() {
   const [stories, setStories] = useState([]);

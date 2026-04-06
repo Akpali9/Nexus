@@ -352,3 +352,42 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION handle_new_user();
+
+-- =====================================================
+-- MISSING: GROUP MESSAGES (add after groups table)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS group_messages (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  group_id UUID REFERENCES groups(id) ON DELETE CASCADE NOT NULL,
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  content TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE group_messages ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Group members see messages" ON group_messages FOR SELECT
+  USING (EXISTS (
+    SELECT 1 FROM group_members gm WHERE gm.group_id = group_messages.group_id AND gm.user_id = auth.uid()
+  ));
+CREATE POLICY "Group members send messages" ON group_messages FOR INSERT
+  WITH CHECK (auth.uid() = user_id AND EXISTS (
+    SELECT 1 FROM group_members gm WHERE gm.group_id = group_messages.group_id AND gm.user_id = auth.uid()
+  ));
+
+-- =====================================================
+-- MISSING: STREAM CHAT RLS
+-- =====================================================
+ALTER TABLE stream_chat ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Stream chat visible to all" ON stream_chat FOR SELECT USING (TRUE);
+CREATE POLICY "Authenticated users can chat" ON stream_chat FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- =====================================================
+-- ENABLE REALTIME (run these in Supabase dashboard or use:)
+-- =====================================================
+-- ALTER PUBLICATION supabase_realtime ADD TABLE posts;
+-- ALTER PUBLICATION supabase_realtime ADD TABLE messages;
+-- ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
+-- ALTER PUBLICATION supabase_realtime ADD TABLE live_streams;
+-- ALTER PUBLICATION supabase_realtime ADD TABLE stream_chat;
+-- ALTER PUBLICATION supabase_realtime ADD TABLE group_messages;
+-- ALTER PUBLICATION supabase_realtime ADD TABLE follows;

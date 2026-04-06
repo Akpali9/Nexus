@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../services/supabase';
-import { useAuth } from '../context/AuthContext';
-import { useRealtime } from '../context/RealtimeContext';
+import { useAuthStore } from '../stores/authStore';
+import { useRealtimeStore } from '../stores/realtimeStore';
 import StoriesBar from '../components/stories/StoriesBar';
 import CreatePost from '../components/feed/CreatePost';
 import PostCard from '../components/feed/PostCard';
 import RightSidebar from '../components/layout/RightSidebar';
+import Sidebar from '../components/layout/Sidebar';
 
 export default function HomePage() {
-  const { user } = useAuth();
-  const { newPosts, setNewPosts, emit } = useRealtime();
+  const { user } = useAuthStore();
+  const { newPosts, clearNewPosts } = useRealtimeStore();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -27,41 +28,51 @@ export default function HomePage() {
     fetchPosts();
   }, [user]);
 
+  // Merge real-time new posts into feed
   useEffect(() => {
     if (newPosts.length > 0) {
-      setPosts(prev => [...newPosts, ...prev]);
-      setNewPosts([]);
+      // Fetch full post data with profile join
+      const fetchNewPosts = async () => {
+        const ids = newPosts.map(p => p.id);
+        const { data } = await supabase
+          .from('posts')
+          .select('*, user:profiles(*)')
+          .in('id', ids);
+        if (data) setPosts(prev => [...data, ...prev]);
+        clearNewPosts();
+      };
+      fetchNewPosts();
     }
-  }, [newPosts, setNewPosts]);
+  }, [newPosts, clearNewPosts]);
 
   const handlePost = async (postData) => {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('posts')
       .insert({
         user_id: user.id,
         content: postData.content,
-        media_url: postData.media
+        media_urls: postData.media ? [postData.media] : [],
       })
       .select('*, user:profiles(*)')
       .single();
-    if (data) {
-      setPosts(prev => [data, ...prev]);
-      emit('new_post', data);
-    }
+    if (data) setPosts(prev => [data, ...prev]);
   };
 
-  if (loading) return <div className="loading">Loading feed...</div>;
-
   return (
-    <div style={{ display: 'flex', gap: '24px', padding: '24px 24px 24px 0', minHeight: '100vh' }}>
-      <div style={{ flex: 1, maxWidth: '640px', minWidth: 0 }}>
-        <StoriesBar />
-        <CreatePost onPost={handlePost} />
-        {posts.map(post => (
-          <PostCard key={post.id} post={post} />
-        ))}
-      </div>
-      <RightSidebar />
+    <div style={{ display: 'flex', minHeight: '100vh' }}>
+      <Sidebar />
+      <main style={{ flex: 1, marginLeft: 'var(--sidebar-width)', display: 'flex', gap: '24px', padding: '24px', maxWidth: '1200px' }}>
+        <div style={{ flex: 1, maxWidth: '640px', minWidth: 0 }}>
+          <StoriesBar />
+          <CreatePost onPost={handlePost} />
+          {loading ? (
+            <div className="loading">Loading feed...</div>
+          ) : (
+            posts.map(post => <PostCard key={post.id} post={post} />)
+          )}
+        </div>
+        <RightSidebar />
+      </main>
     </div>
   );
 }
